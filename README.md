@@ -9,9 +9,7 @@ TODO: Write short description here and embulk-parser-lesson.gemspec file.
 
 ## Configuration
 
-- **option1**: description (integer, required)
-- **option2**: description (string, default: `"myvalue"`)
-- **option3**: description (string, default: `null`)
+- **format_type**: simple or detail. choose how much information you want to show
 
 ## Example
 
@@ -19,16 +17,14 @@ TODO: Write short description here and embulk-parser-lesson.gemspec file.
 in:
   type: any file input plugin type
   parser:
-    type: lesson
-    option1: example1
-    option2: example2
+    type: active_support_log
+    log_format: simple
 ```
 
-(If guess supported) you don't have to write `parser:` section in the configuration file. After writing `in:` section, you can let embulk guess `parser:` section using this command:
-
+## how to use
 ```
 $ embulk gem install embulk-parser-lesson
-$ embulk guess -g lesson config.yml -o guessed.yml
+$ embulk preview
 ```
 
 ## Build
