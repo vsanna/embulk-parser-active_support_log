@@ -1,0 +1,23 @@
+=== 4.54.1.1 (2015-2-4)
+* Upgrade to ICU4J 54.1.1
+
+=== 4.53.1.0 (2014-8-19)
+* Upgrade to ICU4J 53.1
+
+=== 4.51.2.0 (2013-10-11)
+* Upgrade to ICU4J 51.2
+
+=== 4.50.1.0 (2012-11-9)
+* Upgrade to ICU4J 50.1
+
+=== 4.49.1.0 (2012-6-9)
+* Upgrade to ICU4J 49.1
+
+=== 4.8.1.1 (2011-9-16)
+* Upgrade to ICU4J 4.8.1.1
+
+=== 4.8.1.0 (2011-7-31)
+* Upgrade to ICU4J 4.8.1
+
+=== 4.8.0 (2011-6-26)
+* Initial release based on ICU4J 4.8

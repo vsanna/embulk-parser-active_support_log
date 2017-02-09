@@ -1,0 +1,110 @@
+#!/usr/bin/env ruby
+
+if RUBY_PLATFORM =~ /java/i
+  if ENV['EMBULK_BIN_ENABLE_BUNDLE'] == File.expand_path(__FILE__)
+    # bin/embulk is run by CRuby (embulk gem for CRuby is installed). enable embulk_bundle.
+    ENV.delete('EMBULK_BIN_ENABLE_BUNDLE')
+    # include -cp CLASSPATH to LOAD_PATH so that embulk_bundle.rb can load bundler included in embulk-core.jar
+    $LOAD_PATH << "uri:classloader:/"
+    require_relative '../lib/embulk/command/embulk_bundle'
+  else
+    # bin/embulk is run by JRuby (embulk gem for JRuby is installed). disable embulk_bundle not to bother the JRuby's bundler
+    $LOAD_PATH << File.expand_path('../lib', File.dirname(__FILE__))
+    require 'embulk/command/embulk_main'
+  end
+  exit 0
+end
+
+java_args = []
+jruby_args = []
+default_optimize = false
+overwrite_optimize = nil
+
+until ARGV.empty?
+  v = ARGV[0]
+  case v
+  when "-J+O"
+    overwrite_optimize = true
+    ARGV.shift
+  when "-J-O"
+    overwrite_optimize = false
+    ARGV.shift
+  when "-J"
+    prop_path = ARGV[1]
+    unless prop_path
+      STDERR.puts "-J option requires an option"
+      exit 1
+    end
+    props = File.read(prop_path)
+    java_props = props.split("\n").reject {|prop| prop.strip.empty? }
+    java_args = java_props + java_args
+    ARGV.shift
+    ARGV.shift
+  when /-J(.*)/
+    java_args << v[2..-1]
+    ARGV.shift
+  when /-R(.*)/
+    jruby_args << v[2..-1]
+    ARGV.shift
+  when "run"
+    default_optimize = true
+    break
+  else
+    break
+  end
+end
+
+# TODO cygwin check
+cygwin = false
+
+java_cmd = ENV['JAVACMD']
+unless java_cmd
+  if java_home = ENV['JAVA_HOME']
+    if cygwin
+      java_cmd = "#{`cygpath -u "#{java_home}"`.strip}/bin/java"
+    else
+      java_cmd = "#{java_home}/bin/java"
+    end
+  else
+    java_cmd = "java"
+  end
+end
+
+if overwrite_optimize == true || (default_optimize == true && overwrite_optimize != false)
+  java_args = %w[-XX:+AggressiveOpts -XX:+UseConcMarkSweepGC] + java_args
+else
+  java_args = %w[-XX:+AggressiveOpts -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -Xverify:none] + java_args
+end
+
+# Disable bundler options of CRuby before starting JRuby
+ENV.delete('GEM_HOME')
+ENV.delete('GEM_PATH')
+ENV.delete('BUNDLE_GEMFILE')
+ENV.delete('BUNDLE_BIN_PATH')
+ENV.delete('RUBYLIB')
+ENV.delete('RUBYOPT')
+
+env = {
+  'EMBULK_BIN_ENABLE_BUNDLE' => File.expand_path(__FILE__)
+}
+
+begin
+  require 'jruby-jars'
+rescue LoadError => e
+  STDERR.puts  "Could not load jruby-jar.gem. Did you run with \"bundle exec\"?"
+  raise e
+end
+jruby_cp = "#{File.dirname(JRubyJars.core_jar_path)}/*"
+embulk_cp = "#{File.expand_path('../../classpath', __FILE__)}/*"  # bundler is included in embulk-core.jar
+
+# java ... -jar ruby-complete.jar bin/embulk "$@"
+cmdline = [java_cmd]
+cmdline.concat java_args
+cmdline << '-cp' << [jruby_cp, embulk_cp].join(File::PATH_SEPARATOR)
+cmdline << 'org.jruby.Main'
+cmdline.concat jruby_args
+cmdline << __FILE__
+cmdline.concat ARGV
+exec env, *cmdline
+exit 127
+

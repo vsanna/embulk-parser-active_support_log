@@ -1,0 +1,6 @@
+dependencies {
+    compile project(':embulk-core')
+    compile project(':embulk-standards')
+
+    testCompile project(':embulk-core').sourceSets.test.output
+}

@@ -1,0 +1,15 @@
+target/
+build/
+pkg/
+*.iml
+*~
+._*
+.idea
+tmp/
+vendor/
+/classpath/
+/.bundle
+.yardoc
+/embulk-*.jar
+/.gradle
+/coverage
