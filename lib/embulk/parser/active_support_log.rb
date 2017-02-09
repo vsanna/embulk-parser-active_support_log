@@ -1,4 +1,5 @@
-require_relative './active_support_parser'
+require "embulk/parser/active_support_parser"
+require 'pry'
 
 module Embulk
   module Parser
@@ -55,9 +56,7 @@ module Embulk
         decoder = Java::LineDecoder.new(file_input.instance_eval { @java_file_input }, @decoder_task)
         @parser = ActiveSupportParser.new(@log_format, decoder)
 
-        while file = file_input.next_file
-          @parser.parse(file, page_builder)
-        end
+        @parser.parse(page_builder)
         page_builder.finish
       end
     end
